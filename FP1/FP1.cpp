@@ -133,3 +133,53 @@ function<void(Node*, StrNode*)> printAvgByCategory =
 			calcCountByCategory(orders, catNode->data) << "\n",
 			printAvgByCategory(orders, catNode->next));
 	};
+
+function<void(Node*&)> readOrders = [&](Node*& head) -> void {
+	string line;
+	(getline(cin, line))
+		? (line.empty()
+			? readOrders(head)
+			: (append(head, parseOrder(line)),
+				readOrders(head)))
+		: void();
+	};
+
+function<void(StrNode*&, stringstream&)> readCategories =
+[&](StrNode*& head, stringstream& ss) -> void {
+	string token;
+	(getline(ss, token, ','))
+		? (appendStr(head, (token[0] == ' ' ? token.substr(1) : token)),
+			readCategories(head, ss))
+		: void();
+	};
+
+
+int main() {
+	string dateFrom, dateTo;
+	cin >> dateFrom >> dateTo;
+	cin.ignore();
+
+	StrNode* categories = nullptr;
+	string catLine;
+	getline(cin, catLine);
+	stringstream catSS(catLine);
+	readCategories(categories, catSS);
+
+	Node* orders = nullptr;
+	readOrders(orders);
+
+	auto byDate = makeDataFilter(dateFrom, dateTo);
+	auto byPositive = makePositiveFilter();
+	auto byCategory = makeCategoryFilter(categories);
+
+	Node* step1 = filter(orders, byDate);
+	Node* step2 = filter(step1, byPositive);
+	Node* filtered = filter(step2, byCategory);
+
+	printList(filtered);
+	cout << calcTotal(filtered) << "\n";
+	cout << calcMax(filtered, filtered->data).orderAmount << "\n";
+	printAvgByCategory(filtered, categories);
+
+	return 0;
+}
